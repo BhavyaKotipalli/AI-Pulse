@@ -1,0 +1,20 @@
+# Optional: real Postgres + pgvector for parity with production.
+# Usage: docker compose up -d, then set DATABASE_URL in .env.local and run `npm run setup`.
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: ai_pulse
+      POSTGRES_PASSWORD: ai_pulse
+      POSTGRES_DB: ai_pulse
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ai_pulse"]
+      interval: 5s
+      retries: 10
+
+volumes:
+  pgdata:
