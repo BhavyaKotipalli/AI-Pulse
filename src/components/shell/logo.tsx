@@ -20,7 +20,7 @@ export function Logo() {
   return (
     <span className="flex items-center gap-2.5">
       <LogoMark />
-      <span className="text-[15px] font-semibold tracking-tight text-fg">
+      <span className="whitespace-nowrap text-[15px] font-semibold tracking-tight text-fg">
         AI Pulse
       </span>
     </span>

@@ -24,7 +24,7 @@ export default async function ToolsPage() {
         {tools.length === 0 ? (
           <EmptyState title="No tools tracked yet" />
         ) : (
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {tools.map((t) => (
               <StoryCard key={t.id} item={t} saved={saved.get(t.id)} />
             ))}
@@ -36,7 +36,7 @@ export default async function ToolsPage() {
         {launches.length === 0 ? (
           <EmptyState title="No launches tracked yet" />
         ) : (
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {launches.map((t) => (
               <StoryCard key={t.id} item={t} saved={saved.get(t.id)} />
             ))}

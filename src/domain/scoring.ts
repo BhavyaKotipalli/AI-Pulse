@@ -65,10 +65,15 @@ export interface ScoreInputs {
   momentum: number;
   publishedAt: Date;
   now?: Date;
+  /** How the sub-scores were produced; surfaced in the UI so heuristic scores are never mistaken for model judgments. */
+  method?: ScoreMethod;
 }
+
+export type ScoreMethod = "llm" | "heuristic" | "demo";
 
 export interface ScoreBreakdown {
   version: number;
+  method?: ScoreMethod;
   dimensions: Record<ScoreDimension, number>;
   clickbaitPenalty: number;
   corroborationBonus: number;
@@ -110,6 +115,7 @@ export function computeScore(input: ScoreInputs): ScoreBreakdown {
 
   return {
     version: SCORING_VERSION,
+    method: input.method ?? "llm",
     dimensions: Object.fromEntries(
       SCORE_DIMENSIONS.map((d) => [d, Math.round(dimensions[d])]),
     ) as Record<ScoreDimension, number>,
@@ -132,3 +138,17 @@ export function scoreBand(score: number): ScoreBand {
 export const DEEP_ANALYSIS_THRESHOLD = 65;
 /** Items at or above this score require multi-source corroboration to avoid a "single source" flag. */
 export const MAJOR_STORY_THRESHOLD = 70;
+
+/** Recovers the inputs of a stored breakdown so the score can be recomputed (e.g. to refresh recency). */
+export function rescore(b: ScoreBreakdown, publishedAt: Date, corroboratingSources: number, now: Date = new Date()): ScoreBreakdown {
+  const clickbait = Math.min(1, Math.max(0, (1 - b.clickbaitPenalty) / 0.35));
+  return computeScore({
+    sub: { impact: b.dimensions.impact, novelty: b.dimensions.novelty, technical: b.dimensions.technical, industry: b.dimensions.industry, career: b.dimensions.career, clickbait },
+    sourceCredibility: b.dimensions.credibility / 100,
+    corroboratingSources,
+    momentum: b.dimensions.momentum,
+    publishedAt,
+    now,
+    method: b.method,
+  });
+}

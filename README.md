@@ -2,7 +2,7 @@
 
 **Understand AI before everyone else.** A personal intelligence system that monitors the AI and technology ecosystem, ranks developments by signal (not popularity), explains why they matter, tracks trends over time, and turns news into things to learn and build.
 
-> Status: **Phase 1 (Foundation) complete.** Runs fully offline on a labeled demo dataset. Live ingestion (Phase 2) and real LLM providers (Phase 3) are next — see [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md).
+> Status: **Phase 1 (Foundation) and Phase 2 (live ingestion) complete; scheduled automation and a deterministic daily briefing are in.** Pulls live intelligence from 16 public sources (official lab blogs, publications, arXiv, Hugging Face Papers, Hacker News, GitHub). AI analysis uses an offline mock until real LLM providers land (Phase 3). See [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) and [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ## What's in it
 
@@ -56,6 +56,9 @@ Then set `DATABASE_URL=postgres://ai_pulse:ai_pulse@localhost:5432/ai_pulse` in 
 | `npm run setup` | Migrate; seed demo data if the database is empty |
 | `npm run db:seed` | Migrate; wipe content tables and reseed (dates re-anchor to now) |
 | `npm run db:generate` | Generate a migration after editing `src/server/db/schema` |
+| `npm run job ingest` | Fetch all live sources now (normalize → dedupe → link → score) |
+| `npm run job daily` | Rescore for recency, recompute skill momentum, snapshot trends, rebuild today's briefing |
+| `npm run db:purge-demo` | Remove the simulated starter items (keeps curated reference data) |
 | `npm run lint` · `npm run typecheck` · `npm test` | Quality gates (`npm run check` runs all three) |
 
 ## About the demo data
@@ -87,6 +90,10 @@ Read more: [Product requirements](docs/PRODUCT_REQUIREMENTS.md) · [Architecture
 
 See [.env.example](.env.example). Nothing is required for local demo mode.
 
-## Deployment (preview)
+## Deployment
 
-Vercel (Node runtime) + Neon/Supabase Postgres. Set `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, run `npm run setup` against the database once, and deploy. Scheduled ingestion via Vercel Cron arrives in Phase 9.
+Vercel + Neon, with daily Vercel Cron jobs for ingestion and the briefing. Step-by-step guide: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+
+## Live sources
+
+OpenAI, Google DeepMind, Google AI, Hugging Face, NVIDIA, AWS ML, Apple ML Research, GitHub Blog (AI), MIT Technology Review, TechCrunch AI, The Verge AI, Ars Technica AI (RSS/Atom) · Hugging Face Daily Papers · arXiv (cs.AI/CL/LG/CV/RO/MA) · Hacker News (AI stories ≥ 60 points) · GitHub (new repos in llm / ai-agents / mcp / rag / generative-ai). Only titles, metadata and short excerpts are stored; links always go to the original. Without an LLM, scores are rule-based estimates and are labeled **heuristic** in every score tooltip.

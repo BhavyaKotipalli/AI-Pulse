@@ -42,7 +42,7 @@ export default async function TrendPage({ params }: PageProps<"/trends/[slug]">)
           </Link>
           <span className="text-fg-subtle">/</span>
           <TrendStatusBadge status={trend.status} />
-          {trend.isDemo && <DemoBadge />}
+          {trend.isDemo && <DemoBadge curated />}
           <span className="text-xs text-fg-subtle">First seen {formatDate(trend.firstSeenAt, { month: "short", day: "numeric", year: "numeric" })}</span>
           <BookmarkButton targetType="trend" targetId={trend.id} saved={saved.get(trend.id)} defaultCollection="research" className="ml-auto" />
         </div>
@@ -70,7 +70,7 @@ export default async function TrendPage({ params }: PageProps<"/trends/[slug]">)
         </section>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         <Card className="p-5">
           <div className="mb-3 flex items-center justify-between">
             <p className="text-sm font-medium text-fg">Mentions · 90 days</p>
@@ -132,7 +132,7 @@ export default async function TrendPage({ params }: PageProps<"/trends/[slug]">)
 
       <section>
         <SectionHeader eyebrow="Actors" title="Companies & technologies involved" />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[...byType.entries()].map(([type, list]) => (
             <Card key={type} className="p-5">
               <p className="mb-3 font-mono text-[11px] uppercase tracking-wider text-fg-subtle">{titleCase(type)}s</p>
@@ -154,7 +154,7 @@ export default async function TrendPage({ params }: PageProps<"/trends/[slug]">)
 
       <section>
         <SectionHeader eyebrow="Evidence" title={`${items.length} supporting sources`} />
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           {items.map((it) => (
             <StoryCard key={it.id} item={it} variant="compact" />
           ))}
@@ -164,7 +164,7 @@ export default async function TrendPage({ params }: PageProps<"/trends/[slug]">)
       {impacts.length > 0 && (
         <section>
           <SectionHeader eyebrow="Career impact" title="How roles change" href="/career" />
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {impacts.map((imp) => (
               <Card key={imp.id} className="p-5">
                 <p className="text-sm font-medium text-fg">{ROLE_LABELS[imp.role]}</p>
@@ -178,7 +178,7 @@ export default async function TrendPage({ params }: PageProps<"/trends/[slug]">)
       {experiments.length > 0 && (
         <section>
           <SectionHeader eyebrow="Act on it" title="Experiments from this trend" href="/experiments" />
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {experiments.map((e) => (
               <ExperimentCard key={e.id} exp={e} />
             ))}

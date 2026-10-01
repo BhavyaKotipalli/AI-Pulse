@@ -14,7 +14,10 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx scripts/setup.ts --migrate-only",
     "db:seed": "tsx scripts/setup.ts --reseed",
-    "check": "npm run lint && npm run typecheck && npm run test"
+    "check": "npm run lint && npm run typecheck && npm run test",
+    "job": "tsx scripts/job.ts",
+    "db:purge-demo": "tsx scripts/job.ts purge-demo",
+    "vercel-build": "tsx scripts/setup.ts && next build"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.8",
@@ -29,6 +32,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "drizzle-orm": "^0.45.3",
+    "fast-xml-parser": "^5.11.2",
     "lucide-react": "^1.49.0",
     "motion": "^13.5.0",
     "next": "16.3.8",

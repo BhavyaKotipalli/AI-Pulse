@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import type { Briefing, Claim, ItemAnalysis } from "@/domain/analysis";
+import { validateClaims } from "@/domain/citations";
 import { DEMO_USER_ID } from "@/domain/constants";
 import { computeScore } from "@/domain/scoring";
 import { classifySkillMomentum } from "@/domain/skills";
@@ -90,7 +91,8 @@ export async function seedDemo(db: Database, now: Date = new Date()) {
       description: e.description,
       url: e.url ?? null,
       aliases: e.aliases ?? [],
-      isDemo: true,
+      // Entities are real-world reference data (companies, models, skills), kept when demo content is purged.
+      isDemo: false,
     })),
   );
   await db.insert(s.entityRelations).values(
@@ -119,6 +121,7 @@ export async function seedDemo(db: Database, now: Date = new Date()) {
       momentum: it.momentum,
       publishedAt,
       now,
+      method: "demo",
     });
     const clusterId = crypto.randomUUID();
     clusterRows.push({ id: clusterId, title: it.title, leadItemId: itemId(it.key), sourceCount: it.corroboration, itemCount: it.corroboration, firstSeenAt: publishedAt });
@@ -322,4 +325,30 @@ export async function seedDemo(db: Database, now: Date = new Date()) {
     experiments: seedExperiments.length,
     startups: seedStartups.length,
   };
+}
+
+/**
+ * Production seed mode: keep only curated reference data (entities, relations, trend theses,
+ * experiments, startup profiles, role analyses) and remove everything simulated — demo news
+ * items, demo sources, the demo briefing, synthetic trend/skill time series and any citation
+ * of demo items. Facts left without a source are downgraded by the citation validator.
+ */
+export async function reduceToReference(db: Database, now: Date = new Date()) {
+  await db.delete(s.items).where(eq(s.items.isDemo, true));
+  await db.delete(s.sources).where(eq(s.sources.isDemo, true));
+  await db.delete(s.briefings).where(eq(s.briefings.isDemo, true));
+  await db.execute(sql`delete from story_clusters c where not exists (select 1 from items i where i.cluster_id = c.id)`);
+  await db.delete(s.trendSnapshots);
+  await db.delete(s.skillSignals);
+  await db.update(s.skillStatus).set({ status: "insufficient", growth30d: null, last30: 0, prev30: 0, evidenceItemIds: [], updatedAt: now });
+  await db.update(s.careerImpacts).set({ sourceItemIds: [], confidence: "low" });
+  await db.update(s.experiments).set({ sourceItemIds: [] });
+  await db.update(s.startupProfiles).set({ sourceItemIds: [], verifiedFields: [] });
+  const trendRows = await db.select({ id: s.trends.id, implications: s.trends.implications }).from(s.trends);
+  for (const t of trendRows) {
+    await db
+      .update(s.trends)
+      .set({ implications: validateClaims(t.implications, new Set()), firstSeenAt: now, updatedAt: now })
+      .where(eq(s.trends.id, t.id));
+  }
 }

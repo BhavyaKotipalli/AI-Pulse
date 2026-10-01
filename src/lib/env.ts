@@ -21,8 +21,14 @@ const EnvSchema = z.object({
   GITHUB_CLIENT_ID: z.string().optional(),
   GITHUB_CLIENT_SECRET: z.string().optional(),
   GITHUB_TOKEN: z.string().optional(),
-  CRON_SECRET: z.string().optional(),
-  LOG_LEVEL: z.enum(["trace", "debug", "info", "warn", "error", "fatal"]).default("info"),
+  CRON_SECRET: z.string().min(16).optional(),
+  /** Comma-separated emails allowed to trigger jobs from the UI in production. */
+  ADMIN_EMAILS: z
+    .string()
+    .optional()
+    .transform((v) => (v ?? "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean)),
+  SEED_MODE: z.enum(["demo", "reference"]).optional(),
+  LOG_LEVEL: z.enum(["trace", "debug", "info", "warn", "error", "fatal", "silent"]).default("info"),
 });
 
 export type Env = z.infer<typeof EnvSchema> & { DEMO_MODE: boolean };

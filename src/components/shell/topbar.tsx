@@ -46,13 +46,13 @@ export function Topbar({ status, footer }: { status: ReactNode; footer: ReactNod
   return (
     <header className="glass sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-line px-4 sm:px-6">
       <MobileNav footer={footer} />
-      <Link href="/" className="lg:hidden" aria-label="AI Pulse home">
+      <Link href="/" className="shrink-0 lg:hidden" aria-label="AI Pulse home">
         <Logo />
       </Link>
       <button
         type="button"
         onClick={() => open()}
-        className="ml-auto flex h-9 w-full max-w-md items-center gap-2.5 rounded-lg border border-line bg-surface-1/80 px-3 text-left text-[13px] text-fg-subtle transition-colors hover:border-line-strong hover:text-fg-muted lg:ml-0"
+        className="ml-auto flex h-9 w-full min-w-0 max-w-md items-center gap-2.5 rounded-lg border border-line bg-surface-1/80 px-3 text-left text-[13px] text-fg-subtle transition-colors hover:border-line-strong hover:text-fg-muted lg:ml-0"
         aria-label="Search or ask (Ctrl+K)"
       >
         <Search className="size-4" />

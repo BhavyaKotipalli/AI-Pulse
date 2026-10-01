@@ -4,8 +4,8 @@ import { Sidebar } from "@/components/shell/sidebar";
 import { Topbar } from "@/components/shell/topbar";
 import { UserMenu } from "@/components/shell/user-menu";
 import { Tooltip } from "@/components/ui/tooltip";
-import { env } from "@/lib/env";
 import { getViewer } from "@/server/auth/viewer";
+import { contentMix } from "@/server/repositories/ops";
 import { aiStatus } from "@/services/ai/registry";
 
 export const dynamic = "force-dynamic";
@@ -34,8 +34,7 @@ function AIStatusPill() {
 }
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
-  const viewer = await getViewer();
-  const demo = env().DEMO_MODE;
+  const [viewer, mix] = await Promise.all([getViewer(), contentMix()]);
   const footer = viewer ? (
     <UserMenu name={viewer.name} email={viewer.email} isGuest={viewer.isGuest} />
   ) : (
@@ -49,10 +48,19 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
       <div className="flex min-h-dvh">
         <Sidebar footer={footer} />
         <div className="flex min-w-0 flex-1 flex-col">
-          {demo && (
+          {mix.demo > 0 && (
             <div className="border-b border-warn/15 bg-warn/[0.06] px-4 py-1.5 text-center text-[12px] text-warn/90 sm:px-6">
-              Demo dataset — real developments, papers and repositories with <strong className="font-medium">simulated dates</strong> and
-              approximate metrics. Live ingestion replaces this in Phase 2.
+              {mix.live > 0 ? (
+                <>
+                  Live intelligence from public sources, plus starter items marked <strong className="font-medium">DEMO</strong> (simulated
+                  dates).
+                </>
+              ) : (
+                <>
+                  Demo dataset — real developments, papers and repositories with <strong className="font-medium">simulated dates</strong> and
+                  approximate metrics. Run ingestion to load live intelligence.
+                </>
+              )}
             </div>
           )}
           <Topbar status={<AIStatusPill />} footer={footer} />

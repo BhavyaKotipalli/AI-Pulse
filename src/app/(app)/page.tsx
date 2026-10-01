@@ -82,7 +82,7 @@ export default async function OverviewPage() {
       {briefing && headline && (
         <section aria-labelledby="todays-intel">
           <SectionHeader eyebrow="Today's intelligence" title="The biggest development today" href="/today" hrefLabel="Full briefing" />
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
             <StoryCard item={headline} variant="feature" saved={savedItems.get(headline.id)} />
             <Card className="p-5">
               <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.14em] text-fg-subtle">What to pay attention to</p>
@@ -102,7 +102,7 @@ export default async function OverviewPage() {
       {/* Top stories */}
       <section aria-labelledby="top-stories">
         <SectionHeader eyebrow="Ranked by intelligence score" title="Top stories" description="Last 72 hours. Clickbait and single-source hype are down-ranked." href="/for-you" hrefLabel="For you" />
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           {stories.map((s, i) => (
             <StoryCard key={s.id} item={s} rank={i + 1} saved={savedItems.get(s.id)} />
           ))}
@@ -112,14 +112,14 @@ export default async function OverviewPage() {
       {/* Trend radar */}
       <section>
         <SectionHeader eyebrow="Trend engine" title="Trend radar" description="Patterns detected across many stories, not single headlines." href="/trends" />
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {trends.map((t) => (
             <TrendCard key={t.id} trend={t} saved={savedTrends.get(t.id)} />
           ))}
         </div>
       </section>
 
-      <div className="grid gap-10 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
         {/* Research radar */}
         <section>
           <SectionHeader eyebrow="Research radar" title="Papers worth your time" href="/research" />
@@ -145,7 +145,7 @@ export default async function OverviewPage() {
         </section>
       </div>
 
-      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+      <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
         {/* Experiment of the day */}
         {featuredExperiment && (
           <section>
@@ -170,7 +170,7 @@ export default async function OverviewPage() {
       {/* Startups */}
       <section>
         <SectionHeader eyebrow="Startup radar" title="Startups to watch" href="/startups" />
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {startups.map((s) => (
             <StartupCard key={s.slug} startup={s} />
           ))}

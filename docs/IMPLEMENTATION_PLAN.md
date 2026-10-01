@@ -38,12 +38,22 @@ Known gaps carried forward:
 - `drizzle-kit` pulls an esbuild version with a moderate dev-server advisory (dev tooling only, not shipped).
 - Trend "graph" is a propagation chain; the interactive knowledge-graph explorer is Phase 4 (`entityGraph()` repository is ready).
 
-## Phase 2 — Ingestion ⬜ (next)
-- `SourceConnector` interface + Zod-validated connectors: RSS/Atom (official blogs, publications), arXiv API (3 s spacing), HN Algolia, GitHub search + repo snapshots, HF Daily Papers
-- Normalizer: canonical URL (strip tracking params), `url_hash`, `content_hash`, permitted snippet only
-- Job runner with `job_runs` lock + stats; `npm run job ingest`; `/api/cron/ingest` behind `CRON_SECRET`
-- Ingested items get heuristic sub-scores until Phase 3 (source credibility × recency × momentum), flagged `status = normalized`
-- Sources admin view in Settings; `npm run db:purge-demo`
+## Phase 2 — Ingestion ✅ (2026-10-01)
+- [x] `SourceConnector` interface; Zod-validated connectors: RSS/Atom (12 official/editorial feeds, verified live), arXiv (one query per run), Hacker News (Algolia, AI-filtered, ≥ 60 points), GitHub (5 topic searches, star-velocity momentum), Hugging Face Daily Papers (upvotes)
+- [x] HTTP layer: HTTPS + host allow-list (SSRF guard), timeouts, size cap, retries with backoff + jitter, identifying User-Agent
+- [x] Normalizer: canonical URLs (tracking params, www, fragments, trailing slashes), HTML stripping, ≤ 320-char permitted snippets, title cleanup
+- [x] Dedup: URL hash; near-duplicate titles (Jaccard ≥ 0.6, 72 h) join the same story cluster; other sources linking a known URL count as corroboration exactly once (`metrics.seenIn`)
+- [x] Deterministic enrichment: dictionary entity linking, rule-based category/launch detection, clickbait patterns, heuristic sub-scores (labeled "heuristic" in the UI), trend evidence linking (≥ 2 shared entities), skill evidence counting
+- [x] Job runner with `job_runs` lock; `npm run job ingest|daily`; `/api/cron/[job]` (Bearer `CRON_SECRET`, fail-closed, timing-safe)
+- [x] Settings: sources table (items, last fetch), job history, admin-only "Run now" (`ADMIN_EMAILS`)
+- [x] Verified live: 16/16 sources, ~240 items in ~14 s; re-runs are idempotent
+
+## Phase 9 — Automation 🟡 (partial, pulled forward)
+- [x] Vercel Cron (`vercel.json`): ingest 05:00 UTC, daily 06:00 UTC (Hobby plan = daily)
+- [x] Daily job: recency rescoring, skill momentum from live evidence, trend snapshots, deterministic briefing (`deterministic-v1`: selection + source-derived TL;DRs, no generated claims)
+- [x] Production seed mode `SEED_MODE=reference` (curated reference data only; unsourced facts downgraded)
+- [x] Deployment: `vercel-build` (migrate → seed-if-empty → build), GitHub Actions CI, [DEPLOYMENT.md](DEPLOYMENT.md)
+- [ ] Weekly "State of AI" report, budget guard (with Phase 3)
 
 ## Phase 3 — Intelligence engine ⬜
 Real providers (Anthropic Messages API, OpenAI-compatible incl. Ollama, Gemini) with streaming + structured output repair loop; real embeddings (768-d); batched fast-tier classification/extraction; dedup clustering (URL → SimHash → cosine ≥ 0.88); scoring from extracted sub-scores; strong-tier deep analysis for score ≥ 65; `ai_cache`; cost table + daily budget guard; FTS GIN index.
@@ -62,9 +72,6 @@ Generate career impacts per trend; skill evidence counting from extracted entiti
 
 ## Phase 8 — Experiment engine ⬜
 Experiment generation from major items; LLM "Build this" extended plan (milestones, starter repo layout, eval criteria), cached per experiment.
-
-## Phase 9 — Automation ⬜
-`vercel.json` crons, daily briefing + weekly "State of AI" jobs, budget guard, job dashboard.
 
 ## Phase 10 — Hardening ⬜
 Playwright e2e, Ask AI citation eval suite, OpenTelemetry/Sentry, CSP, distributed rate limiting, 404 status fix, a11y audit, performance pass, deployment guide.

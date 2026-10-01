@@ -92,7 +92,7 @@ export default async function LibraryPage({ searchParams }: PageProps<"/library"
           {items.length > 0 && (
             <section>
               <SectionHeader title="Stories, papers & tools" />
-              <div className="grid gap-3 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 {items.map((i) => (
                   <StoryCard key={i.id} item={i} saved={all.filter((b) => b.targetId === i.id).map((b) => b.collection)} />
                 ))}
@@ -102,7 +102,7 @@ export default async function LibraryPage({ searchParams }: PageProps<"/library"
           {experiments.length > 0 && (
             <section>
               <SectionHeader title="Experiments & projects" />
-              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                 {experiments.map((e) => (
                   <ExperimentCard key={e.id} exp={e} saved={all.filter((b) => b.targetId === e.id).map((b) => b.collection)} />
                 ))}
@@ -112,7 +112,7 @@ export default async function LibraryPage({ searchParams }: PageProps<"/library"
           {savedTrends.length > 0 && (
             <section>
               <SectionHeader title="Trends" />
-              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                 {savedTrends.map((t) => (
                   <TrendCard key={t.id} trend={t} saved={all.filter((b) => b.targetId === t.id).map((b) => b.collection)} />
                 ))}
@@ -122,7 +122,7 @@ export default async function LibraryPage({ searchParams }: PageProps<"/library"
           {savedStartups.length > 0 && (
             <section>
               <SectionHeader title="Startups" />
-              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                 {savedStartups.map((s) => (
                   <StartupCard key={s.slug} startup={s} saved={all.filter((b) => b.targetId === s.slug).map((b) => b.collection)} />
                 ))}

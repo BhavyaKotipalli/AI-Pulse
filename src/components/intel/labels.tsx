@@ -63,8 +63,16 @@ export function ConfidenceBadge({ confidence }: { confidence: Confidence }) {
   return <Badge tone={confidence === "low" ? "warn" : "neutral"}>{confidence} confidence</Badge>;
 }
 
-export function DemoBadge() {
-  return (
+/**
+ * DEMO marks seeded news with simulated dates; CURATED marks seeded editorial analysis
+ * (trends, experiments, startups, role analyses) that has not been produced by the live pipeline.
+ */
+export function DemoBadge({ curated = false }: { curated?: boolean }) {
+  return curated ? (
+    <Badge tone="neutral" title="Curated seed analysis — not generated from live ingestion">
+      CURATED
+    </Badge>
+  ) : (
     <Badge tone="warn" title="Seeded demo intelligence — publication time is simulated">
       DEMO
     </Badge>

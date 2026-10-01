@@ -32,7 +32,7 @@ export default async function OpenSourcePage() {
 
       <section>
         <SectionHeader eyebrow="🔥 Rapidly trending" title="Fastest-growing this week" />
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
           {hot.map((r) => (
             <Card key={r.id} interactive className="relative p-5">
               <div className="flex items-center gap-2">

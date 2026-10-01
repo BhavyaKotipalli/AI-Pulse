@@ -43,7 +43,7 @@ function PaperSections({ a }: { a: Extract<ItemAnalysis, { kind: "paper" }> }) {
     ["Can I build a project from it?", a.projectPotential],
   ];
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       {rows.map(([q, ans]) => (
         <Card key={q} className="p-5">
           <p className="mb-1.5 text-sm font-medium text-fg">{q}</p>
@@ -79,7 +79,7 @@ export default async function IntelPage({ params }: PageProps<"/intel/[id]">) {
   const singleSource = item.score >= MAJOR_STORY_THRESHOLD && item.sourceCount < 2;
 
   return (
-    <div className="grid gap-10 xl:grid-cols-[minmax(0,1fr)_320px]">
+    <div className="grid grid-cols-1 gap-10 xl:grid-cols-[minmax(0,1fr)_320px]">
       <article className="min-w-0 space-y-8">
         <header>
           <SourceLine item={item} />
@@ -171,7 +171,7 @@ export default async function IntelPage({ params }: PageProps<"/intel/[id]">) {
 
         {a && (
           <Block title="Why should I care?">
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {AUDIENCES.filter((k) => a.audiences[k]).map((k) => (
                 <div key={k} className="rounded-xl border border-line bg-surface-1 p-4">
                   <p className="mb-1 text-xs font-medium text-accent-strong">{AUDIENCE_LABELS[k]}</p>
@@ -184,7 +184,7 @@ export default async function IntelPage({ params }: PageProps<"/intel/[id]">) {
 
         {a && (
           <Block title="What should I do?">
-            <Card className="grid gap-4 p-5 sm:grid-cols-2">
+            <Card className="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2">
               <div>
                 <p className="text-xs text-fg-subtle">Recommended action</p>
                 <p className="mt-1 text-sm text-fg">{a.action.action}</p>
@@ -207,7 +207,7 @@ export default async function IntelPage({ params }: PageProps<"/intel/[id]">) {
 
         {a?.kind === "article" && a.career && (
           <Block title="Career impact">
-            <div className="grid gap-3 text-sm sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
               <p className="text-fg-muted">
                 <span className="text-fg">Roles affected: </span>
                 {a.career.rolesAffected.map((r) => ROLE_LABELS[r as Role] ?? r).join(", ")}
@@ -262,7 +262,7 @@ export default async function IntelPage({ params }: PageProps<"/intel/[id]">) {
 
         {experiments.length > 0 && (
           <Block title="Experiments you can try">
-            <div className="grid gap-3 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               {experiments.map((e) => (
                 <ExperimentCard key={e.id} exp={e} />
               ))}

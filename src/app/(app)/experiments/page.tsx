@@ -34,7 +34,7 @@ export default async function ExperimentsPage({ searchParams }: PageProps<"/expe
       {list.length === 0 ? (
         <EmptyState title="No experiments at this level yet" />
       ) : (
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
           {list.map((e, i) => (
             <ExperimentCard key={e.id} exp={e} saved={saved.get(e.id)} featured={i === 0 && !active} />
           ))}

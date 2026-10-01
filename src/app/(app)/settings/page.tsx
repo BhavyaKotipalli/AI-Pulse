@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import { PageHeader, SectionHeader } from "@/components/intel/section-header";
 import { PreferencesForm } from "@/components/settings/preferences-form";
+import { RunJobButton } from "@/components/settings/run-job-button";
+import { relativeTime } from "@/lib/utils";
+import { canRunJobs } from "@/server/actions/jobs";
+import { recentJobRuns } from "@/server/jobs/runner";
+import { sourcesOverview } from "@/server/repositories/ops";
 import { Card } from "@/components/ui/card";
 import { env } from "@/lib/env";
 import { getViewer } from "@/server/auth/viewer";
@@ -22,7 +27,13 @@ function Stat({ label, value, hint }: { label: string; value: string; hint?: str
 
 export default async function SettingsPage() {
   const viewer = await getViewer();
-  const [prefs, usage] = await Promise.all([viewer ? getPreferences(viewer.id) : Promise.resolve({ interests: [], roles: [] }), usageSummary(30)]);
+  const [prefs, usage, srcs, runs, admin] = await Promise.all([
+    viewer ? getPreferences(viewer.id) : Promise.resolve({ interests: [], roles: [] }),
+    usageSummary(30),
+    sourcesOverview(),
+    recentJobRuns(8),
+    canRunJobs(),
+  ]);
   const status = aiStatus();
   const e = env();
   const nf = new Intl.NumberFormat("en");
@@ -45,7 +56,7 @@ export default async function SettingsPage() {
 
       <section>
         <SectionHeader title="AI usage · last 30 days" description="Every model call is metered. Costs are estimates from provider list prices." />
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Stat label="Requests" value={nf.format(usage.totals.requests)} />
           <Stat label="Input tokens" value={nf.format(usage.totals.inputTokens)} hint="Estimated (≈4 chars/token) for the mock provider" />
           <Stat label="Output tokens" value={nf.format(usage.totals.outputTokens)} />
@@ -85,6 +96,74 @@ export default async function SettingsPage() {
             </tbody>
           </table>
         </Card>
+      </section>
+
+      <section>
+        <SectionHeader
+          title="Sources & ingestion"
+          description="Live connectors run on a schedule (Vercel Cron). Each source is fetched independently; one failing feed never blocks the others."
+        />
+        {admin && (
+          <Card className="mb-4 flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:gap-6">
+            <RunJobButton job="ingest" label="Run ingestion now" />
+            <RunJobButton job="daily" label="Rebuild briefing & scores" />
+          </Card>
+        )}
+        <Card className="overflow-x-auto">
+          <table className="w-full min-w-[620px] text-sm">
+            <thead>
+              <tr className="border-b border-line text-left font-mono text-[11px] uppercase tracking-wider text-fg-subtle">
+                <th className="px-5 py-3 font-normal">Source</th>
+                <th className="px-3 py-3 font-normal">Type</th>
+                <th className="px-3 py-3 text-right font-normal">Credibility</th>
+                <th className="px-3 py-3 text-right font-normal">Items</th>
+                <th className="px-5 py-3 font-normal">Last fetched</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-line">
+              {srcs.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-5 py-6 text-center text-fg-subtle">
+                    No live sources yet — the first ingestion run registers them.
+                  </td>
+                </tr>
+              ) : (
+                srcs.map((src) => (
+                  <tr key={src.slug}>
+                    <td className="px-5 py-3">
+                      <a href={src.homepage ?? "#"} target="_blank" rel="noreferrer" className="text-fg hover:underline">
+                        {src.name}
+                      </a>
+                    </td>
+                    <td className="px-3 py-3 font-mono text-xs text-fg-muted">{src.kind}</td>
+                    <td className="px-3 py-3 text-right font-mono text-xs tabular">{src.credibility.toFixed(2)}</td>
+                    <td className="px-3 py-3 text-right font-mono text-xs tabular">{src.items}</td>
+                    <td className="px-5 py-3 text-xs text-fg-muted">{src.lastFetchedAt ? relativeTime(src.lastFetchedAt) : "never"}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </Card>
+        {runs.length > 0 && (
+          <Card className="mt-4 divide-y divide-line text-sm">
+            {runs.map((r) => (
+              <div key={r.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-5 py-3">
+                <span className="w-16 font-mono text-xs text-fg">{r.job}</span>
+                <span className={r.status === "succeeded" ? "text-xs text-up" : r.status === "failed" ? "text-xs text-down" : "text-xs text-warn"}>{r.status}</span>
+                <span className="text-xs text-fg-subtle">{relativeTime(r.startedAt)}</span>
+                <span className="ml-auto truncate font-mono text-[11px] text-fg-subtle">
+                  {r.error ??
+                    Object.entries(r.stats)
+                      .filter(([, v]) => typeof v === "number")
+                      .slice(0, 4)
+                      .map(([k, v]) => `${k} ${v}`)
+                      .join(" · ")}
+                </span>
+              </div>
+            ))}
+          </Card>
+        )}
       </section>
 
       <section>

@@ -112,9 +112,11 @@ export default async function TodayPage() {
                   {headline.title}
                 </Link>
               </h3>
-              <p className="mt-3 text-[15px] leading-relaxed text-fg-muted">
-                <ClaimLabel label="fact" /> <span className="ml-1">{c.headline.summary}</span>
-              </p>
+              {c.headline.summary && (
+                <p className="mt-3 text-[15px] leading-relaxed text-fg-muted">
+                  <ClaimLabel label="fact" /> <span className="ml-1">{c.headline.summary}</span>
+                </p>
+              )}
               <p className="mt-3 text-[15px] leading-relaxed text-fg-muted">
                 <ClaimLabel label="analysis" /> <span className="ml-1">{c.headline.whyItMatters}</span>
               </p>
@@ -136,7 +138,7 @@ export default async function TodayPage() {
           </Section>
         )}
 
-        <div className="grid gap-10 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2">
           {tool && (
             <Section emoji="🛠" title="Tool worth trying">
               <StoryCard item={tool} />
@@ -153,7 +155,7 @@ export default async function TodayPage() {
           <Bullets list={c.jobs} items={items} />
         </Section>
 
-        <div className="grid gap-10 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2">
           {startup && (
             <Section emoji="🚀" title="Startup to watch">
               <StartupCard startup={startup} />

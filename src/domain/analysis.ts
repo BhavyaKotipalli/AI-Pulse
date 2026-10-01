@@ -86,6 +86,8 @@ export const ItemMetricsSchema = z.object({
   arxivId: z.string().optional(),
   authors: z.array(z.string()).optional(),
   pricing: z.string().optional(),
+  /** Slugs of other sources that also covered/linked this exact URL (idempotent corroboration). */
+  seenIn: z.array(z.string()).optional(),
 });
 export type ItemMetrics = z.infer<typeof ItemMetricsSchema>;
 

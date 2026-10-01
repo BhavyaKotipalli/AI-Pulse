@@ -32,7 +32,11 @@ export function ScoreBadge({ score, breakdown, size = "md" }: { score: number; b
       content={
         <div className="w-60 space-y-2">
           <div className="flex items-center justify-between text-fg">
-            <span className="font-medium">Intelligence score</span>
+            <span className="font-medium">
+              Intelligence score
+              {breakdown.method === "heuristic" && <span className="ml-1.5 text-[10px] font-normal text-warn">heuristic</span>}
+              {breakdown.method === "demo" && <span className="ml-1.5 text-[10px] font-normal text-warn">demo</span>}
+            </span>
             <span className="font-mono">{breakdown.score}</span>
           </div>
           <ul className="space-y-1">
@@ -49,6 +53,7 @@ export function ScoreBadge({ score, breakdown, size = "md" }: { score: number; b
           <p className="border-t border-line pt-2 text-[11px] leading-relaxed text-fg-subtle">
             Weights {SCORE_DIMENSIONS.map((d) => Math.round(SCORE_WEIGHTS[d] * 100)).join("/")} · clickbait ×{breakdown.clickbaitPenalty} ·
             corroboration ×{breakdown.corroborationBonus}
+            {breakdown.method === "heuristic" && " · Sub-scores estimated by rules (no AI model configured)."}
           </p>
         </div>
       }

@@ -50,7 +50,7 @@ export default async function ExperimentPage({ params }: PageProps<"/experiments
           <span className="inline-flex items-center gap-1 text-xs text-fg-subtle">
             <Clock className="size-3" /> {e.timeEstimate}
           </span>
-          {e.isDemo && <DemoBadge />}
+          {e.isDemo && <DemoBadge curated />}
         </div>
         <h1 className="text-balance text-[30px] font-semibold leading-tight tracking-[-0.025em] text-fg">{e.title}</h1>
         <p className="mt-3 text-lg leading-relaxed text-fg-muted">{e.summary}</p>
@@ -60,7 +60,7 @@ export default async function ExperimentPage({ params }: PageProps<"/experiments
         </div>
       </header>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <Card className="space-y-5 p-6">
           <div>
             <p className="mb-1 text-sm font-medium text-fg">Why it&apos;s interesting</p>
@@ -138,7 +138,7 @@ export default async function ExperimentPage({ params }: PageProps<"/experiments
       {sources.length > 0 && (
         <section>
           <SectionHeader eyebrow="Inspired by" title="Source intelligence" />
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {sources.map((s) => (
               <StoryCard key={s.id} item={s} variant="compact" />
             ))}

@@ -32,7 +32,7 @@ export default async function ResearchPage({ searchParams }: PageProps<"/researc
       {filtered.length === 0 ? (
         <EmptyState title="No papers for this topic yet" />
       ) : (
-        <div className="grid gap-3 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
           {filtered.map((p) => (
             <StoryCard key={p.id} item={p} saved={saved.get(p.id)} />
           ))}

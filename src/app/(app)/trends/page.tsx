@@ -50,7 +50,7 @@ export default async function TrendsPage() {
         title="Macro trends"
         description="Detected by clustering related stories across sources and tracking their mention volume over time. Each trend lists its evidence, actors and implications."
       />
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {trends.map((t) => (
           <TrendCard key={t.id} trend={t} saved={saved.get(t.id)} />
         ))}
@@ -58,7 +58,7 @@ export default async function TrendsPage() {
 
       <section>
         <SectionHeader eyebrow="Analytics · last 7 days" title="What the ecosystem is talking about" />
-        <div className="grid gap-4 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           <Card className="p-5">
             <p className="mb-4 text-sm font-medium text-fg">Most active companies</p>
             <BarList rows={companies.map((c) => ({ label: c.name, value: c.mentions, hint: `avg ${c.avgScore}` }))} />

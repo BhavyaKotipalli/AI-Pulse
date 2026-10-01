@@ -19,7 +19,7 @@ export default async function StartupsPage() {
         title="AI startups to watch"
         description="What they solve, the AI underneath, competition, weaknesses — and startup ideas they inspire. Fields not verified against a cited source are marked as such."
       />
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {startups.map((s) => (
           <StartupCard key={s.slug} startup={s} saved={saved.get(s.slug)} />
         ))}

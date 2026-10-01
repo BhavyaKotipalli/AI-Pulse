@@ -25,7 +25,7 @@ export function TrendCard({ trend, saved }: { trend: TrendSummary; saved?: Colle
     <article className="group relative flex flex-col rounded-[var(--radius-card)] border border-line bg-surface-1 p-5 transition-colors hover:border-line-strong hover:bg-surface-2/50">
       <div className="flex items-center gap-2">
         <TrendStatusBadge status={trend.status} />
-        {trend.isDemo && <DemoBadge />}
+        {trend.isDemo && <DemoBadge curated />}
         <span className="ml-auto text-xs text-fg-subtle">{trend.evidenceCount} sources</span>
       </div>
       <h3 className="mt-3 text-[15px] font-medium leading-snug tracking-tight text-fg">

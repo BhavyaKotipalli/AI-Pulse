@@ -56,7 +56,7 @@ export default async function CareerPage({ searchParams }: PageProps<"/career">)
           title="Skill momentum"
           description="Status is computed from evidence: mentions in the last 30 days vs the prior 30 (≥ +60% exploding, ≥ +15% growing, ±15% stable, below declining)."
         />
-        <Card className="grid gap-x-10 px-5 py-2 md:grid-cols-2">
+        <Card className="grid grid-cols-1 gap-x-10 px-5 py-2 md:grid-cols-2">
           <ul className="divide-y divide-line">
             {skills.slice(0, Math.ceil(skills.length / 2)).map((s) => (
               <SkillRow key={s.id} skill={s} />
@@ -79,7 +79,7 @@ export default async function CareerPage({ searchParams }: PageProps<"/career">)
           allLabel="All roles"
           options={ROLES.filter((r) => allImpacts.some((i) => i.role === r)).map((r) => ({ value: r, label: ROLE_LABELS[r] }))}
         />
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {impacts.map((imp) => (
             <Card key={imp.id} className="flex flex-col gap-4 p-6">
               <div className="flex items-start justify-between gap-3">
@@ -95,7 +95,7 @@ export default async function CareerPage({ searchParams }: PageProps<"/career">)
               <div className="h-1 overflow-hidden rounded-full bg-surface-3">
                 <div className="h-full rounded-full bg-gradient-to-r from-accent to-hot" style={{ width: `${imp.exposure}%` }} />
               </div>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <TagList title="Tasks being automated" items={imp.automated} tone="down" />
                 <TagList title="Tasks being augmented" items={imp.augmented} tone="neutral" />
                 <TagList title="Skills increasing" items={imp.newSkills} tone="up" />

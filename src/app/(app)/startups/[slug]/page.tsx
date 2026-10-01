@@ -59,7 +59,7 @@ export default async function StartupPage({ params }: PageProps<"/startups/[slug
             <Link href="/startups" className="text-[13px] text-fg-subtle hover:text-fg">
               Startup radar
             </Link>
-            {data.isDemo && <DemoBadge />}
+            {data.isDemo && <DemoBadge curated />}
           </div>
           <h1 className="text-[30px] font-semibold tracking-[-0.025em] text-fg">{data.name}</h1>
           <p className="mt-1 text-lg text-fg-muted">{p.tagline}</p>
@@ -74,7 +74,7 @@ export default async function StartupPage({ params }: PageProps<"/startups/[slug
         </div>
       </header>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         <Card className="px-6 py-2">
           <Field label="Problem" verified={v("problem")}>{p.problem}</Field>
           <Field label="Product" verified={v("product")}>{p.product}</Field>
@@ -114,7 +114,7 @@ export default async function StartupPage({ params }: PageProps<"/startups/[slug
         {data.sources.length === 0 ? (
           <p className="text-sm text-fg-subtle">No ingested coverage yet. Profile fields without a source are marked “not verified”.</p>
         ) : (
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {data.sources.map((s) => (
               <StoryCard key={s.id} item={s} variant="compact" />
             ))}
