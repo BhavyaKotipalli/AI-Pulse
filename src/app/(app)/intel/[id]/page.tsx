@@ -135,6 +135,13 @@ export default async function IntelPage({ params }: PageProps<"/intel/[id]">) {
           </Card>
         )}
 
+        {a && !item.isDemo && (
+          <p className="rounded-lg border border-line bg-surface-1 px-4 py-2.5 text-xs leading-relaxed text-fg-subtle">
+            The analysis below is AI-generated from the source excerpt and general background knowledge — not from the full article. Statements
+            labeled FACT are supported by the excerpt; verify details against the original.
+          </p>
+        )}
+
         {a?.kind === "paper" && (
           <Block title="Research breakdown">
             <PaperSections a={a} />

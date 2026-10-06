@@ -2,7 +2,7 @@
 
 **Understand AI before everyone else.** A personal intelligence system that monitors the AI and technology ecosystem, ranks developments by signal (not popularity), explains why they matter, tracks trends over time, and turns news into things to learn and build.
 
-> Status: **Phase 1 (Foundation) and Phase 2 (live ingestion) complete; scheduled automation and a deterministic daily briefing are in.** Pulls live intelligence from 16 public sources (official lab blogs, publications, arXiv, Hugging Face Papers, Hacker News, GitHub). AI analysis uses an offline mock until real LLM providers land (Phase 3). See [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) and [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+> Status: **feature-complete on free tiers.** Live ingestion from 16 public sources, LLM enrichment and analysis (Gemini / Groq / OpenRouter / any OpenAI-compatible endpoint — or fully offline with no key), trend discovery, generated experiments and role-impact analysis, daily briefing and weekly report, knowledge graph, voice assistant. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) to deploy for free and [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) for what is left.
 
 ## What's in it
 
@@ -90,9 +90,25 @@ Read more: [Product requirements](docs/PRODUCT_REQUIREMENTS.md) · [Architecture
 
 See [.env.example](.env.example). Nothing is required for local demo mode.
 
+## AI providers
+
+AI Pulse talks to models through one OpenAI-compatible adapter, so providers are presets rather than code:
+
+| `AI_PROVIDER` | Key | Notes |
+|---|---|---|
+| `mock` (default) | none | Offline. Extractive answers, rule-based scores, hashed embeddings. |
+| `gemini` | `GEMINI_API_KEY` | Recommended free option — text **and** embeddings. |
+| `groq` | `GROQ_API_KEY` | Fast open models; pair with a Gemini key for embeddings. |
+| `openrouter` | `OPENROUTER_API_KEY` | Set `AI_FAST_MODEL` / `AI_STRONG_MODEL` (e.g. `:free` models). |
+| `openai` | `OPENAI_BASE_URL` | Any compatible endpoint, e.g. local Ollama. |
+
+Two tiers keep usage low: a **fast** model classifies and scores every item in batches; a **strong** model writes deep analysis only for items scoring 65+, plus trend discovery, experiments, briefing synthesis and Ask AI. Calls are paced and capped per day (`AI_REQUESTS_PER_MINUTE`, `AI_DAILY_REQUEST_LIMIT`), metered in Settings, and every structured output is schema-validated with one repair attempt. Jobs stop cleanly on rate limits and resume on the next run.
+
+Pipeline jobs (`npm run job <name>`, or the buttons in Settings): `ingest` → `enrich` → `insights` → `daily`.
+
 ## Deployment
 
-Vercel + Neon, with daily Vercel Cron jobs for ingestion and the briefing. Step-by-step guide: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+Vercel + Supabase, with a free GitHub Actions scheduler (every 3 hours) and daily Vercel Cron as backup. Step-by-step guide: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ## Live sources
 

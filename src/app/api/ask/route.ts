@@ -6,8 +6,9 @@ import { getViewer } from "@/server/auth/viewer";
 import type { MessageCitation } from "@/server/db/schema";
 import { QA_SYSTEM_PROMPT, buildGroundedPrompt, retrieveSources } from "@/server/qa/answer";
 import { appendExchange } from "@/server/repositories/conversations";
-import { recordEvent, recordUsage } from "@/server/repositories/user-data";
-import { getLLM } from "@/services/ai/registry";
+import { recordEvent } from "@/server/repositories/user-data";
+import { ai } from "@/server/ai/gateway";
+import { BudgetExceededError, ProviderError, RateLimitError } from "@/services/ai/types";
 
 export const runtime = "nodejs";
 
@@ -45,13 +46,12 @@ export async function POST(req: Request) {
   }
 
   const viewer = await getViewer();
-  const llm = getLLM();
+  const llm = ai({ interactive: true }).llm;
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       const send = (e: AskEvent) => controller.enqueue(encoder.encode(`${JSON.stringify(e)}\n`));
-      const started = Date.now();
       try {
         const sources = await retrieveSources(body.question, body.history, body.aboutItemId);
         const citations: MessageCitation[] = sources.map((s) => ({
@@ -69,7 +69,7 @@ export async function POST(req: Request) {
           task: "ask",
           system: QA_SYSTEM_PROMPT,
           messages: [...body.history.slice(-6), { role: "user" as const, content: buildGroundedPrompt(body.question, sources) }],
-          maxOutputTokens: 900,
+          maxOutputTokens: 2000,
         };
         let answer = "";
         for await (const chunk of llm.stream(request)) {
@@ -92,20 +92,19 @@ export async function POST(req: Request) {
           });
           await recordEvent(viewer.id, "ask", undefined, body.question.toLowerCase().split(/\W+/).filter((w) => w.length > 3).slice(0, 10));
         }
-        await recordUsage({
-          provider: llm.id,
-          model: llm.isMock ? "mock-extractive" : llm.id,
-          tier: "strong",
-          task: "ask",
-          inputTokens: Math.ceil(request.messages.reduce((n, m) => n + m.content.length, 0) / 4),
-          outputTokens: Math.ceil(answer.length / 4),
-          costUsd: 0,
-          latencyMs: Date.now() - started,
-        });
         send({ type: "done", conversationId, cited: validated.cited, removedCitations: validated.removed, provider: llm.id, isMock: llm.isMock });
       } catch (err) {
-        logger.error({ err }, "ask failed");
-        send({ type: "error", message: "Something went wrong while answering. Please try again." });
+        logger.error({ err: err instanceof Error ? err.message : err }, "ask failed");
+        // Quota and configuration problems are actionable, so say what happened (never include secrets).
+        const message =
+          err instanceof BudgetExceededError
+            ? err.message
+            : err instanceof RateLimitError
+              ? "The AI provider is rate limiting requests right now (free-tier limit). Please try again in a minute."
+              : err instanceof ProviderError
+                ? `The AI provider returned an error: ${err.message}`
+                : "Something went wrong while answering. Please try again.";
+        send({ type: "error", message });
       } finally {
         controller.close();
       }

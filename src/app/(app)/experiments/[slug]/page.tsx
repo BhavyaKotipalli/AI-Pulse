@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Clock, Database, Layers, Target } from "lucide-react";
 import { BookmarkButton } from "@/components/intel/bookmark-button";
+import { BuildPlanSection } from "@/components/intel/build-plan";
+import { aiStatus } from "@/services/ai/registry";
 import { DemoBadge, DifficultyBadge } from "@/components/intel/labels";
 import { SectionHeader } from "@/components/intel/section-header";
 import { StartExperimentButton } from "@/components/intel/start-experiment-button";
@@ -133,6 +135,11 @@ export default async function ExperimentPage({ params }: PageProps<"/experiments
             </li>
           ))}
         </ol>
+      </section>
+
+      <section>
+        <SectionHeader eyebrow="Build this experiment" title="Complete build plan" />
+        <BuildPlanSection experimentId={e.id} plan={e.plan} aiAvailable={!aiStatus().isMock} />
       </section>
 
       {sources.length > 0 && (

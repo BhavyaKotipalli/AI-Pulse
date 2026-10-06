@@ -131,11 +131,11 @@ export async function getItem(id: string): Promise<ItemDetail | null> {
 /** Nearest neighbours by embedding (cosine), optionally restricted by kind. */
 export async function relatedItems(id: string, opts: { kinds?: ItemKind[]; limit?: number } = {}): Promise<ItemSummary[]> {
   const db = getDb();
-  const [target] = await db.select({ embedding: items.embedding }).from(items).where(eq(items.id, id)).limit(1);
-  if (!target?.embedding) return [];
+  const [target] = await db.select({ embedding: items.embedding, model: items.embeddingModel }).from(items).where(eq(items.id, id)).limit(1);
+  if (!target?.embedding || !target.model) return [];
   const distance = cosineDistance(items.embedding, target.embedding);
   return baseSummaryQuery()
-    .where(and(ne(items.id, id), opts.kinds?.length ? inArray(items.kind, opts.kinds) : undefined))
+    .where(and(ne(items.id, id), eq(items.embeddingModel, target.model), opts.kinds?.length ? inArray(items.kind, opts.kinds) : undefined))
     .orderBy(distance)
     .limit(opts.limit ?? 4);
 }

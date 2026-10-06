@@ -16,8 +16,8 @@ function AIStatusPill() {
     <Tooltip
       content={
         status.isMock
-          ? (status.note ??
-            "No AI provider configured. Answers are composed extractively from retrieved sources; enrichment uses precomputed demo analysis.")
+          ? (status.notes[0] ??
+            "No AI provider configured. Answers are composed extractively from retrieved sources. Add a free API key to enable analysis.")
           : `Live provider: ${status.active}`
       }
       side="bottom"

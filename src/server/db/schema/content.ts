@@ -12,7 +12,7 @@ import {
   uniqueIndex,
   vector,
 } from "drizzle-orm/pg-core";
-import type { ItemAnalysis, ItemMetrics, Claim, ExperimentStep, Briefing } from "@/domain/analysis";
+import type { ItemAnalysis, ItemMetrics, Claim, ExperimentStep, Briefing, BuildPlan } from "@/domain/analysis";
 import { EMBEDDING_DIMENSIONS } from "@/domain/constants";
 import type { ScoreBreakdown } from "@/domain/scoring";
 import type {
@@ -81,6 +81,8 @@ export const items = pgTable(
     confidence: text("confidence").$type<Confidence>().notNull().default("medium"),
     clusterId: text("cluster_id").references(() => storyClusters.id, { onDelete: "set null" }),
     embedding: vector("embedding", { dimensions: EMBEDDING_DIMENSIONS }),
+    /** Vector space of `embedding` (EmbeddingProvider.id). Search only compares vectors from the active model. */
+    embeddingModel: text("embedding_model"),
     metrics: jsonb("metrics").$type<ItemMetrics>().notNull().default({}),
     status: text("status").$type<"raw" | "normalized" | "enriched" | "enrich_failed">().notNull().default("raw"),
     isDemo: boolean("is_demo").notNull().default(false),
@@ -284,6 +286,8 @@ export const experiments = pgTable("experiments", {
   resumeValue: integer("resume_value").notNull(),
   startupPotential: integer("startup_potential").notNull(),
   steps: jsonb("steps").$type<ExperimentStep[]>().notNull().default([]),
+  /** Cached AI-generated extended build plan ("Build this"). */
+  plan: jsonb("plan").$type<BuildPlan>(),
   sourceItemIds: text("source_item_ids").array().notNull().default(sql`'{}'::text[]`),
   trendId: text("trend_id").references(() => trends.id, { onDelete: "set null" }),
   createdAt: ts("created_at").notNull().defaultNow(),

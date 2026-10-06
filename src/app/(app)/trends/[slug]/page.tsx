@@ -12,7 +12,9 @@ import { Card } from "@/components/ui/card";
 import { ROLE_LABELS, type EntityType } from "@/domain/taxonomy";
 import { formatDate, titleCase } from "@/lib/utils";
 import { getViewer } from "@/server/auth/viewer";
-import { getTrend } from "@/server/repositories/intel";
+import { GraphExplorer } from "@/components/intel/graph-explorer";
+import { layoutGraph } from "@/domain/graph-layout";
+import { getTrend, knowledgeGraph } from "@/server/repositories/intel";
 import { bookmarkState } from "@/server/repositories/user-data";
 
 export async function generateMetadata({ params }: PageProps<"/trends/[slug]">): Promise<Metadata> {
@@ -26,6 +28,7 @@ export default async function TrendPage({ params }: PageProps<"/trends/[slug]">)
   if (!data) notFound();
   const { trend, items, entities, series, impacts, experiments } = data;
   const viewer = await getViewer();
+  const graph = await knowledgeGraph({ trendId: trend.id });
   const saved = viewer ? await bookmarkState(viewer.id, "trend", [trend.id]) : new Map();
 
   const byType = new Map<EntityType, typeof entities>();
@@ -151,6 +154,13 @@ export default async function TrendPage({ params }: PageProps<"/trends/[slug]">)
           ))}
         </div>
       </section>
+
+      {graph.nodes.length > 2 && (
+        <section>
+          <SectionHeader eyebrow="Knowledge graph" title="Relationships around this trend" href="/graph" hrefLabel="Full graph" />
+          <GraphExplorer nodes={graph.nodes} edges={graph.edges} positions={layoutGraph(graph.nodes, graph.edges, 460)} height={460} />
+        </section>
+      )}
 
       <section>
         <SectionHeader eyebrow="Evidence" title={`${items.length} supporting sources`} />

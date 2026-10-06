@@ -49,6 +49,7 @@ const approxTokens = (s: string) => Math.ceil(s.length / 4);
 export class MockLLMProvider implements LLMProvider {
   readonly id = "mock";
   readonly isMock = true;
+  readonly models = { fast: "mock-extractive", strong: "mock-extractive" };
 
   async generate(req: GenerateRequest): Promise<GenerateResult> {
     const prompt = req.messages.map((m) => m.content).join("\n\n");

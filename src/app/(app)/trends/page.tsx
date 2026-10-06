@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { TrendCard } from "@/components/intel/cards";
+import { FilterChips } from "@/components/intel/filter-chips";
 import { EmptyState, PageHeader, SectionHeader } from "@/components/intel/section-header";
 import { Card } from "@/components/ui/card";
 import { CATEGORY_LABELS } from "@/domain/taxonomy";
@@ -32,13 +33,22 @@ function BarList({ rows }: { rows: Array<{ label: string; value: number; hint?: 
   );
 }
 
-export default async function TrendsPage() {
+const WINDOWS = [
+  { value: "24h", label: "24 hours", hours: 24 },
+  { value: "7d", label: "7 days", hours: 24 * 7 },
+  { value: "30d", label: "30 days", hours: 24 * 30 },
+  { value: "90d", label: "90 days", hours: 24 * 90 },
+] as const;
+
+export default async function TrendsPage({ searchParams }: PageProps<"/trends">) {
+  const requested = (await searchParams).window;
+  const window = WINDOWS.find((w) => w.value === requested) ?? WINDOWS[1];
   const viewer = await getViewer();
   const [trends, companies, technologies, categories] = await Promise.all([
     listTrends(),
-    topEntities("company", 24 * 7, 7),
-    topEntities("technology", 24 * 7, 7),
-    categoryCounts(24 * 7),
+    topEntities("company", window.hours, 7),
+    topEntities("technology", window.hours, 7),
+    categoryCounts(window.hours),
   ]);
   if (trends.length === 0) return <EmptyState title="No trends detected yet" description="Trends appear once enough related stories accumulate." />;
   const saved = viewer ? await bookmarkState(viewer.id, "trend", trends.map((t) => t.id)) : new Map();
@@ -57,7 +67,14 @@ export default async function TrendsPage() {
       </div>
 
       <section>
-        <SectionHeader eyebrow="Analytics · last 7 days" title="What the ecosystem is talking about" />
+        <SectionHeader eyebrow={`Analytics · last ${window.label}`} title="What the ecosystem is talking about" />
+        <FilterChips
+          basePath="/trends"
+          param="window"
+          active={requested && WINDOWS.some((w) => w.value === requested) ? String(requested) : undefined}
+          allLabel="7 days"
+          options={WINDOWS.filter((w) => w.value !== "7d").map((w) => ({ value: w.value, label: w.label }))}
+        />
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           <Card className="p-5">
             <p className="mb-4 text-sm font-medium text-fg">Most active companies</p>

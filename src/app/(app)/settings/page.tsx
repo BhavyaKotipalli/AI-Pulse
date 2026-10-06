@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { PageHeader, SectionHeader } from "@/components/intel/section-header";
 import { PreferencesForm } from "@/components/settings/preferences-form";
 import { RunJobButton } from "@/components/settings/run-job-button";
+import { TestAiButton } from "@/components/settings/test-ai-button";
+import { requestsToday } from "@/server/ai/gateway";
 import { relativeTime } from "@/lib/utils";
 import { canRunJobs } from "@/server/actions/jobs";
 import { recentJobRuns } from "@/server/jobs/runner";
@@ -36,6 +38,7 @@ export default async function SettingsPage() {
   ]);
   const status = aiStatus();
   const e = env();
+  const usedToday = await requestsToday();
   const nf = new Intl.NumberFormat("en");
 
   return (
@@ -55,12 +58,12 @@ export default async function SettingsPage() {
       </section>
 
       <section>
-        <SectionHeader title="AI usage · last 30 days" description="Every model call is metered. Costs are estimates from provider list prices." />
+        <SectionHeader title="AI usage · last 30 days" description="Every model call is metered. Free-tier providers cost $0; the daily request cap protects your quota." />
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Stat label="Requests" value={nf.format(usage.totals.requests)} />
           <Stat label="Input tokens" value={nf.format(usage.totals.inputTokens)} hint="Estimated (≈4 chars/token) for the mock provider" />
           <Stat label="Output tokens" value={nf.format(usage.totals.outputTokens)} />
-          <Stat label="Estimated cost" value={`$${usage.totals.costUsd.toFixed(4)}`} hint={`Daily budget $${e.AI_DAILY_BUDGET_USD.toFixed(2)}`} />
+          <Stat label="Requests today" value={`${nf.format(usedToday)} / ${nf.format(e.AI_DAILY_REQUEST_LIMIT)}`} hint={`Daily cap resets 00:00 UTC · paced at ${e.AI_REQUESTS_PER_MINUTE}/min`} />
         </div>
         <Card className="mt-4 overflow-x-auto">
           <table className="w-full min-w-[560px] text-sm">
@@ -104,9 +107,11 @@ export default async function SettingsPage() {
           description="Live connectors run on a schedule (Vercel Cron). Each source is fetched independently; one failing feed never blocks the others."
         />
         {admin && (
-          <Card className="mb-4 flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:gap-6">
-            <RunJobButton job="ingest" label="Run ingestion now" />
-            <RunJobButton job="daily" label="Rebuild briefing & scores" />
+          <Card className="mb-4 grid grid-cols-1 gap-4 p-5 sm:grid-cols-2">
+            <RunJobButton job="ingest" label="1 · Fetch sources" />
+            <RunJobButton job="enrich" label="2 · AI enrichment" />
+            <RunJobButton job="insights" label="3 · Trends & insights" />
+            <RunJobButton job="daily" label="4 · Briefing & scores" />
           </Card>
         )}
         <Card className="overflow-x-auto">
@@ -171,7 +176,9 @@ export default async function SettingsPage() {
         <Card className="divide-y divide-line text-sm">
           {[
             ["AI provider", status.isMock ? `Offline mock (configured: ${status.configured})` : status.active],
-            ["Embeddings", status.isMock ? "Feature-hashed 768-d (offline)" : "Provider embeddings"],
+            ["Fast model (classification)", status.models.fast],
+            ["Strong model (analysis, Ask AI)", status.models.strong],
+            ["Embeddings", status.embeddingsMock ? "Feature-hashed 768-d (offline)" : status.embeddings],
             ["Database", getDbHandle().driver === "pglite" ? "Embedded PGlite + pgvector (.data/pglite)" : "PostgreSQL + pgvector"],
             ["Demo mode", e.DEMO_MODE ? "On — guests use a shared demo account" : "Off"],
           ].map(([k, v]) => (
@@ -180,7 +187,16 @@ export default async function SettingsPage() {
               <span className="font-mono text-xs text-fg">{v}</span>
             </div>
           ))}
-          {status.note && <p className="px-5 py-3.5 text-xs text-warn">{status.note}</p>}
+          {status.notes.map((n) => (
+            <p key={n} className="px-5 py-3.5 text-xs text-warn">
+              {n}
+            </p>
+          ))}
+          {admin && (
+            <div className="px-5 py-4">
+              <TestAiButton />
+            </div>
+          )}
         </Card>
       </section>
     </div>

@@ -2,12 +2,37 @@ import "server-only";
 import { and, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import { escapeLike, normalizeQuery, reciprocalRankFusion } from "@/domain/search";
 import type { ItemKind } from "@/domain/taxonomy";
+import { logger } from "@/lib/logger";
+import { ai } from "@/server/ai/gateway";
 import { getEmbedder } from "@/services/ai/registry";
 import { getDb } from "@/server/db/client";
 import { entities, experiments, items, startupProfiles, trends } from "@/server/db/schema";
 import { getItemsByIds, type ItemSummary } from "./items";
 
 const ftsDocument = sql`to_tsvector('english', ${items.title} || ' ' || coalesce(${items.tldr}, '') || ' ' || coalesce(${items.snippet}, '') || ' ' || array_to_string(${items.tags}, ' '))`;
+
+const queryCache = new Map<string, number[]>();
+
+/**
+ * Embeds a search query with a small in-memory cache (palette keystrokes repeat queries).
+ * Returns null when the embedding provider is unavailable or over quota — search then
+ * degrades to full-text only instead of failing.
+ */
+async function embedQuery(q: string): Promise<number[] | null> {
+  const key = `${getEmbedder().id}|${q.toLowerCase()}`;
+  const hit = queryCache.get(key);
+  if (hit) return hit;
+  try {
+    const [vector] = await ai({ interactive: true }).embed([q], "query");
+    if (!vector) return null;
+    if (queryCache.size > 500) queryCache.clear();
+    queryCache.set(key, vector);
+    return vector;
+  } catch (err) {
+    logger.warn({ err: err instanceof Error ? err.message : err }, "query embedding unavailable — using full-text search only");
+    return null;
+  }
+}
 
 export interface RetrievedItem extends ItemSummary {
   similarity: number;
@@ -30,17 +55,20 @@ export async function hybridSearchItems(
   const limit = opts.limit ?? 10;
   const kindFilter = opts.kinds?.length ? inArray(items.kind, opts.kinds) : undefined;
 
-  const [queryVector] = await getEmbedder().embed([q]);
-  const vectorLiteral = `[${queryVector!.join(",")}]`;
+  const queryVector = await embedQuery(q);
+  const vectorLiteral = queryVector ? `[${queryVector.join(",")}]` : null;
   const similarity = sql<number>`1 - (${items.embedding} <=> ${vectorLiteral}::vector)`;
 
   const [vectorHits, textHits] = await Promise.all([
-    db
-      .select({ id: items.id, similarity })
-      .from(items)
-      .where(kindFilter)
-      .orderBy(sql`${items.embedding} <=> ${vectorLiteral}::vector`)
-      .limit(limit * 3),
+    vectorLiteral
+      ? db
+          .select({ id: items.id, similarity })
+          .from(items)
+          // Only vectors from the active embedding model are comparable.
+          .where(and(kindFilter, eq(items.embeddingModel, getEmbedder().id)))
+          .orderBy(sql`${items.embedding} <=> ${vectorLiteral}::vector`)
+          .limit(limit * 3)
+      : Promise.resolve([] as Array<{ id: string; similarity: number }>),
     db
       .select({ id: items.id })
       .from(items)

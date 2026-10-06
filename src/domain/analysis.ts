@@ -97,6 +97,16 @@ export const ExperimentStepSchema = z.object({
 });
 export type ExperimentStep = z.infer<typeof ExperimentStepSchema>;
 
+export const BuildPlanSchema = z.object({
+  overview: z.string(),
+  milestones: z.array(z.object({ title: z.string(), outcome: z.string(), tasks: z.array(z.string()).min(1) })).min(2).max(8),
+  repoStructure: z.array(z.string()).max(25),
+  evaluation: z.array(z.string()).min(1).max(8),
+  risks: z.array(z.string()).max(6),
+  stretchGoals: z.array(z.string()).max(6),
+});
+export type BuildPlan = z.infer<typeof BuildPlanSchema>;
+
 export const BriefingBulletSchema = z.object({
   text: z.string(),
   label: z.enum(CLAIM_LABELS),
@@ -116,6 +126,9 @@ export const BriefingSchema = z.object({
   skill: z.object({ name: z.string(), reason: z.string() }).optional(),
   emergingTrendSlug: z.string().optional(),
   payAttention: z.array(BriefingBulletSchema),
+  /** Optional model-written synthesis; every bullet is validated to cite supplied items. */
+  overview: z.array(BriefingBulletSchema).optional(),
+  title: z.string().optional(),
   readingMinutes: z.number().int().positive(),
 });
 export type Briefing = z.infer<typeof BriefingSchema>;

@@ -3,6 +3,8 @@ import { composeBriefing } from "@/domain/briefing";
 import { rescore } from "@/domain/scoring";
 import { classifySkillMomentum } from "@/domain/skills";
 import type { logger as Logger } from "@/lib/logger";
+import { ai } from "@/server/ai/gateway";
+import { addOverview } from "./insights";
 import { getDb } from "@/server/db/client";
 import {
   briefings,
@@ -72,7 +74,7 @@ async function recomputeSkills(now: Date) {
 }
 
 /** Builds and stores today's deterministic briefing from the top-ranked recent items. */
-export async function buildDailyBriefing(now: Date) {
+export async function buildDailyBriefing(now: Date, log: typeof Logger) {
   const db = getDb();
   let windowHours = 24;
   let candidates = await recentCandidates(now, windowHours);
@@ -91,7 +93,7 @@ export async function buildDailyBriefing(now: Date) {
   const evidence = new Map<string, string[]>();
   for (const e of evidenceRows) evidence.set(e.trendId, [...(evidence.get(e.trendId) ?? []), e.itemId]);
 
-  const content = composeBriefing({
+  const composed = composeBriefing({
     items: candidates,
     totalItemsConsidered: candidates.length,
     trends: trendRows.map((t) => ({ slug: t.slug, title: t.title, thesis: t.thesis, status: t.status, momentum: t.momentum, evidenceItemIds: evidence.get(t.id) ?? [] })),
@@ -100,10 +102,19 @@ export async function buildDailyBriefing(now: Date) {
     skills: skillRows.map((s) => ({ name: s.name, status: s.status.status, growth: s.status.growth30d, evidenceItemIds: s.status.evidenceItemIds })),
     hourUtc: now.getUTCHours(),
   });
-  if (!content) return { briefing: "skipped", reason: "no stories in window" };
+  if (!composed) return { briefing: "skipped", reason: "no stories in window" };
+  const gw = ai();
+  let content = composed;
+  try {
+    content = await addOverview(gw, composed, "today", log);
+  } catch (err) {
+    // Quota exhausted: the deterministic briefing is still complete and fully cited.
+    log.info({ reason: err instanceof Error ? err.message : String(err) }, "briefing overview skipped");
+  }
 
   const isDemo = candidates.every((c) => c.isDemo);
-  const values = { kind: "daily" as const, date: isoDate(now), content, model: "deterministic-v1", generatedAt: now, isDemo };
+  const model = content.overview ? `${gw.llm.models.strong} + deterministic-v1` : "deterministic-v1";
+  const values = { kind: "daily" as const, date: isoDate(now), content, model, generatedAt: now, isDemo };
   await db
     .insert(briefings)
     .values(values)
@@ -158,7 +169,7 @@ export async function runDaily(log: typeof Logger, now: Date = new Date()) {
   const skills = await recomputeSkills(now);
   log.info(skills, "skills recomputed");
   const snaps = await snapshotTrends(now);
-  const briefing = await buildDailyBriefing(now);
+  const briefing = await buildDailyBriefing(now, log);
   log.info(briefing, "briefing");
   return { ...scores, ...skills, ...snaps, ...briefing };
 }

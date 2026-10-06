@@ -15,6 +15,20 @@
       "when": 1790861426045,
       "tag": "0001_init_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791268529882,
+      "tag": "0002_ai_columns",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791269798687,
+      "tag": "0003_enable_rls",
+      "breakpoints": true
     }
   ]
 }

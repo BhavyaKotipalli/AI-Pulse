@@ -8,6 +8,7 @@ import {
   careerImpacts,
   entities,
   entityRelations,
+  itemEntities,
   experiments,
   skillSignals,
   skillStatus,
@@ -239,7 +240,67 @@ export async function getLatestBriefing(kind: "daily" | "weekly" = "daily") {
 export async function hydrateBriefing(content: Briefing) {
   const ids = new Set<string>([content.headline.itemId, ...content.topStoryIds]);
   for (const id of [content.researchItemId, content.toolItemId, content.repoItemId]) if (id) ids.add(id);
-  for (const b of [...content.jobs, ...content.payAttention]) b.sourceItemIds.forEach((id) => ids.add(id));
+  for (const b of [...content.jobs, ...content.payAttention, ...(content.overview ?? [])]) b.sourceItemIds.forEach((id) => ids.add(id));
   const list = await getItemsByIds([...ids]);
   return new Map(list.map((i) => [i.id, i]));
+}
+
+// ─── Knowledge graph ───────────────────────────────────────────────────────
+
+export interface KnowledgeGraph {
+  nodes: Array<{ id: string; label: string; type: string; description: string | null; mentions: number; href: string }>;
+  edges: GraphEdge[];
+}
+
+/**
+ * Entities, their typed relations, and the trends they participate in. Pass a trend id
+ * to get that trend's neighbourhood only. Isolated entities are omitted.
+ */
+export async function knowledgeGraph(opts: { trendId?: string } = {}): Promise<KnowledgeGraph> {
+  const db = getDb();
+  const [allEntities, relations, trendLinks, trendRows, mentionRows] = await Promise.all([
+    db.select({ id: entities.id, slug: entities.slug, name: entities.name, type: entities.type, description: entities.description }).from(entities),
+    db.select().from(entityRelations),
+    db.select().from(trendEntities),
+    db.select({ id: trends.id, slug: trends.slug, title: trends.title, thesis: trends.thesis }).from(trends),
+    db.select({ entityId: itemEntities.entityId, n: sql<number>`count(*)::int` }).from(itemEntities).groupBy(itemEntities.entityId),
+  ]);
+  const mentions = new Map(mentionRows.map((m) => [m.entityId, m.n]));
+  let keep: Set<string> | null = null;
+  if (opts.trendId) {
+    const core = new Set(trendLinks.filter((l) => l.trendId === opts.trendId).map((l) => l.entityId));
+    keep = new Set(core);
+    for (const r of relations) {
+      if (core.has(r.sourceEntityId)) keep.add(r.targetEntityId);
+      if (core.has(r.targetEntityId)) keep.add(r.sourceEntityId);
+    }
+  }
+  const edges: GraphEdge[] = [];
+  for (const r of relations) {
+    if (keep && !(keep.has(r.sourceEntityId) && keep.has(r.targetEntityId))) continue;
+    edges.push({ source: r.sourceEntityId, target: r.targetEntityId, relation: r.relation });
+  }
+  for (const l of trendLinks) {
+    if (opts.trendId ? l.trendId !== opts.trendId : false) continue;
+    edges.push({ source: `trend:${l.trendId}`, target: l.entityId, relation: "involves" });
+  }
+  const connected = new Set(edges.flatMap((e) => [e.source, e.target]));
+  return {
+    nodes: [
+      ...allEntities
+        .filter((e) => connected.has(e.id))
+        .map((e) => ({
+          id: e.id,
+          label: e.name,
+          type: e.type as string,
+          description: e.description,
+          mentions: mentions.get(e.id) ?? 0,
+          href: e.type === "startup" ? `/startups/${e.slug}` : `/search?q=${encodeURIComponent(e.name)}`,
+        })),
+      ...trendRows
+        .filter((t) => connected.has(`trend:${t.id}`))
+        .map((t) => ({ id: `trend:${t.id}`, label: t.title, type: "trend", description: t.thesis, mentions: 0, href: `/trends/${t.slug}` })),
+    ],
+    edges,
+  };
 }

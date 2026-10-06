@@ -3,7 +3,7 @@ import { logger } from "@/lib/logger";
 import { getDb } from "@/server/db/client";
 import { jobRuns } from "@/server/db/schema";
 
-export type JobName = "ingest" | "daily";
+export type JobName = "ingest" | "enrich" | "insights" | "daily";
 
 export interface JobResult {
   status: "succeeded" | "failed" | "skipped";

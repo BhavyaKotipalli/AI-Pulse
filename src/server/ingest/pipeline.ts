@@ -19,7 +19,8 @@ import {
   trendEntities,
   trendItems,
 } from "@/server/db/schema";
-import { getEmbedder } from "@/services/ai/registry";
+import { logger } from "@/lib/logger";
+import { ai } from "@/server/ai/gateway";
 import { CONNECTORS, SOURCE_CATALOG } from "@/services/connectors/catalog";
 import type { RawItem, SourceDefinition } from "@/services/connectors/types";
 
@@ -41,7 +42,9 @@ interface RunContext {
   entityType: Map<string, EntityType>;
   trendEntityMap: Map<string, Set<string>>; // trendId → entityIds
   recent: Array<{ clusterId: string; tokens: Set<string>; sourceId: string | null }>;
-  embed: (texts: string[]) => Promise<number[][]>;
+  /** Null when the embedding provider is unavailable; the re-embed job fills gaps later. */
+  embed: (texts: string[]) => Promise<number[][] | null>;
+  embeddingModel: string;
 }
 
 /** Upserts the live source catalog into `sources` and returns slug → row. */
@@ -69,13 +72,21 @@ async function buildContext(): Promise<RunContext> {
   ]);
   const trendEntityMap = new Map<string, Set<string>>();
   for (const r of te) trendEntityMap.set(r.trendId, (trendEntityMap.get(r.trendId) ?? new Set()).add(r.entityId));
-  const embedder = getEmbedder();
+  const gateway = ai();
   return {
     match: buildEntityMatcher(ents),
     entityType: new Map(ents.map((e) => [e.id, e.type])),
     trendEntityMap,
     recent: recent.filter((r) => r.clusterId).map((r) => ({ clusterId: r.clusterId!, tokens: titleTokens(r.title), sourceId: r.sourceId })),
-    embed: (texts) => embedder.embed(texts),
+    embeddingModel: gateway.embeddingModel,
+    embed: async (texts) => {
+      try {
+        return await gateway.embed(texts, "document");
+      } catch (err) {
+        logger.warn({ err: err instanceof Error ? err.message : err }, "embedding unavailable during ingest — items stored without vectors");
+        return null;
+      }
+    },
   };
 }
 
@@ -252,7 +263,8 @@ async function ingestRaw(raws: RawItem[], def: SourceDefinition, sourceRow: { id
         scoreBreakdown: breakdown,
         confidence: sourceCount >= 2 ? "high" : "medium",
         clusterId,
-        embedding: vectors[i],
+        embedding: vectors?.[i] ?? null,
+        embeddingModel: vectors?.[i] ? ctx.embeddingModel : null,
         metrics: p.raw.metrics ?? {},
         status: "normalized",
         isDemo: false,

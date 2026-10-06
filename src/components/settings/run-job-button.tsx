@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { triggerJob } from "@/server/actions/jobs";
 
-export function RunJobButton({ job, label }: { job: "ingest" | "daily"; label: string }) {
+export function RunJobButton({ job, label }: { job: "ingest" | "enrich" | "insights" | "daily"; label: string }) {
   const [pending, start] = useTransition();
   const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
   return (

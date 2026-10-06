@@ -5,7 +5,7 @@ import { validateClaims } from "@/domain/citations";
 import { DEMO_USER_ID } from "@/domain/constants";
 import { computeScore } from "@/domain/scoring";
 import { classifySkillMomentum } from "@/domain/skills";
-import { hashEmbed } from "@/services/mock/embeddings";
+import { hashEmbed, mockEmbeddingProvider } from "@/services/mock/embeddings";
 import { seedBriefing } from "@/services/mock/seed-data/briefing";
 import { seedCareerImpacts, seedSkillProfiles } from "@/services/mock/seed-data/career";
 import { seedEntities, seedRelations } from "@/services/mock/seed-data/entities";
@@ -147,6 +147,7 @@ export async function seedDemo(db: Database, now: Date = new Date()) {
       confidence: it.confidence ?? (it.corroboration >= 2 ? "high" : "medium"),
       clusterId,
       embedding: hashEmbed([it.title, it.tldr, it.snippet, it.tags.join(" ")].join("\n")),
+      embeddingModel: mockEmbeddingProvider.id,
       metrics: it.metrics ?? {},
       status: "enriched",
       isDemo: true,

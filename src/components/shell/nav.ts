@@ -12,6 +12,7 @@ import {
   Sparkles,
   Sunrise,
   TrendingUp,
+  Waypoints,
   Wrench,
   type LucideIcon,
 } from "lucide-react";
@@ -38,6 +39,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/today", label: "Today", Icon: Sunrise, shortcut: "t", description: "The 5-minute daily briefing" },
       { href: "/for-you", label: "For You", Icon: Sparkles, shortcut: "f", description: "Personalized intelligence feed" },
       { href: "/trends", label: "Trends", Icon: TrendingUp, shortcut: "n", description: "Macro trends detected across stories" },
+      { href: "/graph", label: "Knowledge Graph", Icon: Waypoints, shortcut: "k", description: "How companies, models, skills and trends connect" },
     ],
   },
   {

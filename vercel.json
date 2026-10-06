@@ -3,6 +3,9 @@
   "framework": "nextjs",
   "crons": [
     { "path": "/api/cron/ingest", "schedule": "0 5 * * *" },
+    { "path": "/api/cron/enrich", "schedule": "10 5 * * *" },
+    { "path": "/api/cron/enrich", "schedule": "20 5 * * *" },
+    { "path": "/api/cron/insights", "schedule": "40 5 * * *" },
     { "path": "/api/cron/daily", "schedule": "0 6 * * *" }
   ]
 }

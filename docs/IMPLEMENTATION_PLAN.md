@@ -48,30 +48,46 @@ Known gaps carried forward:
 - [x] Settings: sources table (items, last fetch), job history, admin-only "Run now" (`ADMIN_EMAILS`)
 - [x] Verified live: 16/16 sources, ~240 items in ~14 s; re-runs are idempotent
 
-## Phase 9 — Automation 🟡 (partial, pulled forward)
-- [x] Vercel Cron (`vercel.json`): ingest 05:00 UTC, daily 06:00 UTC (Hobby plan = daily)
-- [x] Daily job: recency rescoring, skill momentum from live evidence, trend snapshots, deterministic briefing (`deterministic-v1`: selection + source-derived TL;DRs, no generated claims)
-- [x] Production seed mode `SEED_MODE=reference` (curated reference data only; unsourced facts downgraded)
-- [x] Deployment: `vercel-build` (migrate → seed-if-empty → build), GitHub Actions CI, [DEPLOYMENT.md](DEPLOYMENT.md)
-- [ ] Weekly "State of AI" report, budget guard (with Phase 3)
+## Phase 3 — Intelligence engine ✅ (2026-10-06)
+- [x] One OpenAI-compatible adapter (chat, streaming SSE, JSON mode, embeddings) with presets for Gemini, Groq, OpenRouter and custom endpoints; missing keys fall back to the offline mock with a visible note
+- [x] Structured generation: JSON Schema in the prompt, Zod validation, one repair attempt, fail closed
+- [x] AI gateway: pacing, daily request cap with an interactive reserve, usage metering; typed rate-limit / budget / provider errors
+- [x] Enrichment job: batched fast-tier classification + sub-scores (`method: "llm"`), grounded TL;DRs (discarded when there is no excerpt), strong-tier deep analysis for score ≥ 65 with claims that cite the item; time-boxed and resumable
+- [x] Embedding model tracked per item; automatic re-embedding when the provider changes; search degrades to full-text when embeddings are unavailable
+- [x] Settings: provider/models/embeddings, requests today vs cap, admin "Test AI connection"
 
-## Phase 3 — Intelligence engine ⬜
-Real providers (Anthropic Messages API, OpenAI-compatible incl. Ollama, Gemini) with streaming + structured output repair loop; real embeddings (768-d); batched fast-tier classification/extraction; dedup clustering (URL → SimHash → cosine ≥ 0.88); scoring from extracted sub-scores; strong-tier deep analysis for score ≥ 65; `ai_cache`; cost table + daily budget guard; FTS GIN index.
+## Phase 4 — Trend engine ✅
+- [x] LLM trend discovery with evidence gates (≥ 3 items from ≥ 2 sources, de-duplicated against existing trends, hallucinated references dropped, unsupported facts downgraded)
+- [x] Deterministic trend momentum/status from live evidence (last 7 vs prior 7 days); daily snapshots
+- [x] Interactive knowledge graph (`/graph` and per trend): server-side deterministic layout, type filters, search, keyboard accessible
+- [x] Analytics windows 24 h / 7 d / 30 d / 90 d
 
-## Phase 4 — Trend engine ⬜
-Embedding clustering over 30-day windows, trend matching/creation, daily snapshots, 24h/7d/30d/90d analytics, interactive knowledge-graph explorer (entities ↔ trends ↔ items).
+## Phase 5 — Ask AI ✅
+- [x] Real-model streaming through the gateway, citation validation, conversation history, pinned "ask about this item", actionable quota/provider error messages
 
-## Phase 5 — Ask AI ⬜
-Real-model streaming, history sidebar on mobile, regenerate/edit, per-claim citation UI, retrieval evals.
+## Phase 6 — Voice ✅
+- [x] `VoiceProvider` interface + browser implementation (Web Speech recognition and synthesis)
+- [x] Sentence-level spoken streaming, barge-in, mute toggle, animated visualizer
 
-## Phase 6 — Voice ⬜
-`VoiceProvider` interface; Web Speech STT/TTS; animated visualizer; barge-in; streaming sentence-level TTS.
+## Phase 7 — Career intelligence ✅
+- [x] Generated role-impact analysis per trend with live evidence (labeled analysis, low confidence unless evidence discusses work effects); skill momentum from evidence counts
 
-## Phase 7 — Career intelligence ⬜
-Generate career impacts per trend; skill evidence counting from extracted entities; job-posting signals (optional source).
+## Phase 8 — Experiment engine ✅
+- [x] Experiments generated from top analyzed items; "Build this" detailed plan (milestones, repo layout, evaluation, risks) generated once and cached
 
-## Phase 8 — Experiment engine ⬜
-Experiment generation from major items; LLM "Build this" extended plan (milestones, starter repo layout, eval criteria), cached per experiment.
+## Phase 9 — Automation ✅
+- [x] Vercel Cron (daily) + GitHub Actions scheduler (every 3 h); jobs `ingest → enrich → insights → daily`
+- [x] Daily briefing and weekly "State of AI" report with optional model-written, citation-validated overview
+- [x] `SEED_MODE=reference`, `vercel-build` migrations, CI
 
-## Phase 10 — Hardening ⬜
-Playwright e2e, Ask AI citation eval suite, OpenTelemetry/Sentry, CSP, distributed rate limiting, 404 status fix, a11y audit, performance pass, deployment guide.
+## Phase 10 — Hardening 🟡
+- [x] Row-level security on all tables (hosts with a public data API), TLS policy for hosted Postgres, security headers, SSRF allow-list, fail-closed secrets
+- [x] 98 unit/integration tests (in-memory Postgres, scripted model, fake connectors)
+- [ ] Playwright end-to-end tests; Ask AI citation eval suite with a live model
+- [ ] Distributed rate limiting (current limiter is per instance); Content-Security-Policy
+- [ ] Unknown `/intel/<id>` returns the 404 UI with HTTP 200 (streaming starts before `notFound()`)
+- [ ] Error monitoring (Sentry / OpenTelemetry)
+- [ ] Live verification against real provider keys — adapters are tested against scripted HTTP responses; confirm with *Settings → Test AI connection* after adding a key
+
+## Later (V2+)
+Anthropic adapter via the official SDK (prompt caching, Batch API), premium voice providers, Reddit / Product Hunt / Semantic Scholar connectors, personal AI memory, email digest, light theme, teams.

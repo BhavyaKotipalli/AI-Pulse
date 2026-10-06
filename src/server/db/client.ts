@@ -23,10 +23,29 @@ interface DbHandle {
 
 const globalForDb = globalThis as unknown as { __aiPulseDb?: DbHandle };
 
+/**
+ * TLS policy for hosted Postgres. Local databases use no TLS. Remote ones are always
+ * encrypted; certificate verification is on only when DATABASE_SSL=strict, because
+ * managed poolers (Supabase, some Neon endpoints) present chains that are not in
+ * Node's default trust store. An explicit sslmode in the URL is left to the driver.
+ */
+function sslFor(url: string): false | { rejectUnauthorized: boolean } | undefined {
+  const mode = process.env.DATABASE_SSL;
+  if (mode === "off") return false;
+  try {
+    const u = new URL(url);
+    if (["localhost", "127.0.0.1", "::1"].includes(u.hostname)) return mode === "strict" ? { rejectUnauthorized: true } : false;
+    if (u.searchParams.has("sslmode")) return undefined;
+  } catch {
+    return undefined;
+  }
+  return { rejectUnauthorized: mode === "strict" };
+}
+
 function create(): DbHandle {
   const url = process.env.DATABASE_URL;
   if (url) {
-    const pool = new Pool({ connectionString: url, max: Number(process.env.DATABASE_POOL_MAX ?? 10) });
+    const pool = new Pool({ connectionString: url, max: Number(process.env.DATABASE_POOL_MAX ?? 10), ssl: sslFor(url) });
     return { db: drizzlePg(pool, { schema }), driver: "pg", close: () => pool.end() };
   }
   const configured = process.env.PGLITE_DIR ?? ".data/pglite";
