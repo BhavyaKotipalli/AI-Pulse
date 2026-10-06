@@ -48,6 +48,10 @@ function create(): DbHandle {
     const pool = new Pool({ connectionString: url, max: Number(process.env.DATABASE_POOL_MAX ?? 10), ssl: sslFor(url) });
     return { db: drizzlePg(pool, { schema }), driver: "pg", close: () => pool.end() };
   }
+  // Serverless file systems are read-only and ephemeral: the embedded database cannot work there.
+  if (process.env.VERCEL && !process.env.PGLITE_DIR) {
+    throw new Error("DATABASE_URL is not set. On Vercel, add DATABASE_URL (and DATABASE_URL_UNPOOLED) — see docs/DEPLOYMENT.md.");
+  }
   const configured = process.env.PGLITE_DIR ?? ".data/pglite";
   // "memory://" gives an ephemeral database (used by integration tests).
   const dir = configured.startsWith("memory://") ? configured : path.resolve(/* turbopackIgnore: true */ process.cwd(), configured);
